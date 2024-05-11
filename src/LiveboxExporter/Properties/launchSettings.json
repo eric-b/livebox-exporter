@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "http": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "launchUrl": "metrics",
+      "dotnetRunMessages": true,
+      "applicationUrl": "http://localhost:9105"
+    }
+  },
+  "$schema": "http://json.schemastore.org/launchsettings.json"
+}
