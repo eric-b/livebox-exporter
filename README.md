@@ -32,7 +32,7 @@ Port and network interface to listen can be set with setting **urls**. Default i
 
 ## Run in Kubernetes
 
-**Image not yet publicly published**. Before I publish an image, you'll need to compile it yourself.
+Docker image is published on [Docker Hub](https://hub.docker.com/r/eric1901/livebox-exporter).
 
 Examples of resource manifests:
 
@@ -67,7 +67,7 @@ spec:
           secretName: livebox-exporter-secret
       containers:
       - name: livebox-exporter
-        image: livebox-exporter:1.0.0
+        image: eric1901/livebox-exporter
         volumeMounts:
         - name: secret-volume
           readOnly: true
