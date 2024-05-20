@@ -4,8 +4,6 @@
     {
         public static readonly TimeSpan DefaultTimerInterval = TimeSpan.FromSeconds(10); 
 
-        public bool AuthIsDisabled { get; set; }
-
         public TimeSpan? TimerInterval { get; set; }
     }
 }

@@ -1,16 +1,17 @@
-﻿namespace LiveboxExporter.Components.Model
+﻿
+namespace LiveboxExporter.Components.Model
 {
-    public class SysBusDevice
+    public class SysBusDevice : IWithError
     {
-        public Status? status { get; set; }
+        public SysBusDeviceStatus? Status { get; set; }
 
-        public Error[]? errors { get; set; }
+        public ResultError[]? Errors { get; set; }
 
-        public class Status
+        public class SysBusDeviceStatus
         {
             public bool Active { get; set; }
-            public string LinkState { get; set; }
-            public string ConnectionState { get; set; }
+            public string LinkState { get; set; } = default!;
+            public string ConnectionState { get; set; } = default!;
             public bool Internet { get; set; }
             public bool IPTV { get; set; }
             public bool Telephony { get; set; }
@@ -18,13 +19,6 @@
             public int UpstreamCurrRate { get; set; }
             public int DownstreamMaxBitRate { get; set; }
             public int UpstreamMaxBitRate { get; set; }
-        }
-
-        public class Error
-        {
-            public int error { get; set; }
-            public string description { get; set; }
-            public string info { get; set; }
         }
     }
     

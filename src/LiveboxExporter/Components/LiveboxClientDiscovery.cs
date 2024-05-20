@@ -34,7 +34,7 @@ namespace LiveboxExporter.Components
             await foreach (IPAddress ipAddress in tracertResult.ConfigureAwait(false))
             {
                 if (ipAddress.AddressFamily == AddressFamily.InterNetwork &&
-                    IPAddressRange.IsPrivateAddress(ipAddress))
+                    IpAddressRange.IsPrivateAddress(ipAddress))
                 {
                     var address = new Uri($"http://{ipAddress}/");
                     var result = await ProbeLivebox(address, cancellationToken).ConfigureAwait(false);

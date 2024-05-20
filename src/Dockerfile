@@ -7,15 +7,16 @@ EXPOSE 9105
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["LiveboxExporter/LiveboxExporter.csproj", "LiveboxExporter/"]
-RUN dotnet restore "./LiveboxExporter/./LiveboxExporter.csproj"
-COPY . .
-WORKDIR "/src/LiveboxExporter"
-RUN dotnet build "./LiveboxExporter.csproj" -c $BUILD_CONFIGURATION -o /app/build
+COPY ["src/Directory.Build.props", "src/"]
+COPY ["src/LiveboxExporter/LiveboxExporter.csproj", "src/LiveboxExporter/"]
+RUN dotnet restore "src/LiveboxExporter/LiveboxExporter.csproj"
+COPY src/ src
+WORKDIR "/src"
+RUN dotnet build "src/LiveboxExporter/LiveboxExporter.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./LiveboxExporter.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "src/LiveboxExporter/LiveboxExporter.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app

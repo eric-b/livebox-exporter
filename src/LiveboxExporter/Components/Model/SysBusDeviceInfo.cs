@@ -2,14 +2,14 @@
 {
     public class SysBusDeviceInfo
     {
-        public Status status { get; set; }
+        public SysBusDeviceInfoStatus Status { get; set; } = default!;
 
-        public class Status
+        public class SysBusDeviceInfoStatus
         {
             public int? UpTime { get; set; }
             public string? DeviceStatus { get; set; }
             public int? NumberOfReboots { get; set; }
-            public string BaseMAC { get; set; }
+            public string BaseMAC { get; set; } = default!;
         }
     }    
 }

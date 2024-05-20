@@ -2,15 +2,15 @@
 {
     public class SysBusNmc
     {
-        public bool status { get; set; }
-        public Data data { get; set; }
+        public bool Status { get; set; }
+        public SysBusNmcData Data { get; set; } = default!;
 
-        public class Data
+        public class SysBusNmcData
         {
-            public string WanState { get; set; }
-            public string LinkState { get; set; }
-            public string GponState { get; set; }
-            public string ConnectionState { get; set; }
+            public string WanState { get; set; } = default!;
+            public string LinkState { get; set; } = default!;
+            public string GponState { get; set; } = default!;
+            public string ConnectionState { get; set; } = default!;
         }
     }
 }

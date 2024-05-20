@@ -3,22 +3,22 @@ using System.Net;
 
 namespace LiveboxExporter.Utility
 {
-    public sealed class IPAddressRange
+    public sealed class IpAddressRange
     {
         // Src: https://stackoverflow.com/a/2138724/249742
 
-        private static readonly IPAddressRange[] PrivateAddressRanges =
+        private static readonly IpAddressRange[] PrivateAddressRanges =
         [
-            new IPAddressRange(IPAddress.Parse("10.0.0.0"), IPAddress.Parse("10.255.255.255")),
-            new IPAddressRange(IPAddress.Parse("172.16.0.0"), IPAddress.Parse("172.31.255.255")),
-            new IPAddressRange(IPAddress.Parse("192.168.0.0"), IPAddress.Parse("192.168.255.255")),
+            new IpAddressRange(IPAddress.Parse("10.0.0.0"), IPAddress.Parse("10.255.255.255")),
+            new IpAddressRange(IPAddress.Parse("172.16.0.0"), IPAddress.Parse("172.31.255.255")),
+            new IpAddressRange(IPAddress.Parse("192.168.0.0"), IPAddress.Parse("192.168.255.255")),
         ];
 
         readonly AddressFamily addressFamily;
         readonly byte[] lowerBytes;
         readonly byte[] upperBytes;
 
-        public IPAddressRange(IPAddress lowerInclusive, IPAddress upperInclusive)
+        public IpAddressRange(IPAddress lowerInclusive, IPAddress upperInclusive)
         {
             addressFamily = lowerInclusive.AddressFamily;
             lowerBytes = lowerInclusive.GetAddressBytes();
