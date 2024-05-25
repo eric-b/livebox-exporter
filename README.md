@@ -15,6 +15,8 @@ This project is designed to run in the background continuously (headless and non
 
 If you are looking for an interactive desktop application, also with more features, see [Livebox Monitor](https://github.com/p-dor/LiveboxMonitor) which works very well.
 
+I also discovered even more alternatives after I made this project, you can look for them through the [livebox topic on Github](https://github.com/topics/livebox).
+
 ## Application settings
 
 If you try to run program with default settings, it may work if you are lucky: Livebox address should be automatically detected if it is on same network (same subnet). 
