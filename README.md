@@ -30,9 +30,22 @@ It's best to configure program with your own settings, especially these keys:
 
 Port and network interface to listen can be set with setting **urls**. Default is `http://localhost:9105`.
 
+## How to run
+
+Program can be run from either:
+
+- From provided binary (windows-x64 and linux-x64). See [Releases section](https://github.com/eric-b/livebox-exporter/releases/latest).
+- From [docker image](https://hub.docker.com/r/eric1901/livebox-exporter).
+- By compiling different kind of binary from source code.
+
+There is little point in running this program alone. You typically need also to setup:
+
+- [Prometheus](https://prometheus.io/) (completely free and open-source)
+- [Grafana](https://grafana.com/docs/grafana/latest/setup-grafana/installation/) (completely free **if you choose the OSS edition**)
+
 ## Run in Kubernetes
 
-**Image not yet publicly published**. Before I publish an image, you'll need to compile it yourself.
+Docker image is published on [Docker Hub](https://hub.docker.com/r/eric1901/livebox-exporter).
 
 Examples of resource manifests:
 
@@ -67,7 +80,7 @@ spec:
           secretName: livebox-exporter-secret
       containers:
       - name: livebox-exporter
-        image: livebox-exporter:1.0.0
+        image: eric1901/livebox-exporter
         volumeMounts:
         - name: secret-volume
           readOnly: true
