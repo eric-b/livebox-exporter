@@ -30,6 +30,19 @@ It's best to configure program with your own settings, especially these keys:
 
 Port and network interface to listen can be set with setting **urls**. Default is `http://localhost:9105`.
 
+## How to run
+
+Program can be run from either:
+
+- From provided binary (windows-x64 and linux-x64). See [Releases section](releases).
+- From [docker image](https://hub.docker.com/r/eric1901/livebox-exporter).
+- By compiling different kind of binary from source code.
+
+There is little point in running this program alone. You typically need also to setup:
+
+- [Prometheus](https://prometheus.io/)
+- [Grafana](https://grafana.com/docs/grafana/latest/setup-grafana/installation/)
+
 ## Run in Kubernetes
 
 Docker image is published on [Docker Hub](https://hub.docker.com/r/eric1901/livebox-exporter).

@@ -388,13 +388,13 @@ namespace LiveboxExporter.Components
                     deviceInfo = _lastDeviceInfo;
                 }
 
-                if (deviceInfo is not null)
+                if (deviceInfo is not null && !_authIsDisabled)
                 {
                     // gathered info from device is available ONLY when auth context is valid.
                     device = await TryGetDevice(deviceInfo, cancellationToken);
                     if (device != null)
                     {
-                        if (ShouldReAuth(device, alreadyReAuth || _authIsDisabled))
+                        if (ShouldReAuth(device, alreadyReAuth))
                         {
                             return ScrapeStatus.ReAuthRequired;
                         }
@@ -409,7 +409,7 @@ namespace LiveboxExporter.Components
                     netDevStat = await TryGetVeip0NetDevStats(cancellationToken);
                     if (netDevStat != null)
                     {
-                        if (ShouldReAuth(netDevStat, alreadyReAuth || _authIsDisabled))
+                        if (ShouldReAuth(netDevStat, alreadyReAuth))
                         {
                             return ScrapeStatus.ReAuthRequired;
                         }
@@ -438,12 +438,12 @@ namespace LiveboxExporter.Components
         {
             if (statusWithError.Errors != null && statusWithError.Errors.Length != 0)
             {
-                bool authError = !disableReAuth && statusWithError.Errors.Any(t => t.Error == 13);
+                bool authError = statusWithError.Errors.Any(t => t.Error == 13);
                 if (!authError)
                 {
                     logger.LogError(string.Join(Environment.NewLine, statusWithError.Errors.Select(t => $"{t.Error}: {t.Description}")));
                 }
-                return authError;
+                return authError && !disableReAuth;
             }
             return false;
         }
