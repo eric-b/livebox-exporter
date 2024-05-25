@@ -24,7 +24,7 @@ namespace LiveboxExporter
 
             ConfigureForwardedHeadersMiddleware(builder);
 
-            builder.Services.AddSingleton<LiveboxMetricsExporter>();
+            builder.Services.AddSingleton<LB5MetricsExporter>();
             if (mode == Mode.Periodic)
             {
                 builder.Services.AddHostedService<LiveboxMetricsBackgroundWorker>();
@@ -44,7 +44,7 @@ namespace LiveboxExporter
 
             if (mode == Mode.Default)
             {
-                var exporter = app.Services.GetRequiredService<LiveboxMetricsExporter>();
+                var exporter = app.Services.GetRequiredService<LB5MetricsExporter>();
                 Metrics.DefaultRegistry.AddBeforeCollectCallback(exporter.Scrape);
 
                 // Warm-up (fake scrape to initialize auth context before actual scrapes).

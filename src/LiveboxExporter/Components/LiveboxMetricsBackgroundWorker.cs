@@ -9,11 +9,11 @@ namespace LiveboxExporter.Components
     public sealed class LiveboxMetricsBackgroundWorker : BackgroundService
     {
         private readonly TimeSpan _timerInterval;
-        private readonly LiveboxMetricsExporter _exporter;
+        private readonly LB5MetricsExporter _exporter;
         private readonly ILogger _logger;
         
         public LiveboxMetricsBackgroundWorker(IOptions<LiveboxMetricsBackgroundWorkerOptions> options,
-                                              LiveboxMetricsExporter exporter,
+                                              LB5MetricsExporter exporter,
                                               ILogger<LiveboxMetricsBackgroundWorker> logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
