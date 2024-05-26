@@ -36,6 +36,17 @@ livebox_ont_tx_heartbeat_errors;gauge;WAN stats (TX heartbeat errors)
 livebox_ont_tx_window_errors;gauge;WAN stats (TX window errors)
 livebox_ont_rx_bit_rate;gauge;WAN stats (RX computed bit rate)
 livebox_ont_tx_bit_rate;gauge;WAN stats (TX computed bit rate)
+livebox_ont_bias;gauge;ONT Bias
+livebox_ont_voltage;gauge;ONT device voltage
+livebox_ont_temperature;gauge;ONT device temperature
+livebox_ont_signal_rx_power;gauge;ONT signal power (RX)
+livebox_ont_signal_tx_power;gauge;ONT signal power (TX)
+livebox_ont_net_dev_state;gauge;ONT device state
+livebox_ont_state;gauge;ONT state
+livebox_ont_mtu;gauge;ONT MTU
+livebox_ont_tx_queue_length;gauge;ONT TX queue length
+livebox_ont_status;gauge;ONT status
+livebox_ont_enable;gauge;ONT enabled
 livebox_nmc_wan_state;gauge;NMC WAN state
 livebox_nmc_link_state;gauge;NMC Link state
 livebox_nmc_gpon_state;gauge;NMC GPON state

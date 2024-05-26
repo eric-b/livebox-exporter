@@ -2,6 +2,7 @@
 using LiveboxExporter.Extensions.Dictionary;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace LiveboxExporter.Components
 {
@@ -41,13 +42,14 @@ namespace LiveboxExporter.Components
                 _logger = logger ?? throw new ArgumentNullException(nameof(logger));
                 _authIsDisabled = authIsDisabled;
 
-                _metrics = new LB5Metrics();
+                _metrics = new LB5Metrics(logger);
             }
 
             public void Update(SysBusDeviceInfo? deviceInfo,
                                SysBusDevice? device,
                                SysBusNmc? nmc,
-                               NeMoNetDevStats? netDevStats)
+                               NeMoNetDevStats? nemoNetDevStats,
+                               NeMo? nemo)
             {
                 var integerValues = new Dictionary<string, long>();
                 try
@@ -108,9 +110,9 @@ namespace LiveboxExporter.Components
                                               LB5Metrics.device_iptv);
                     }
 
-                    if (netDevStats != null && netDevStats.Status != null)
+                    if (nemoNetDevStats != null && nemoNetDevStats.Status != null)
                     {
-                        NeMoNetDevStats.NeMoNetDevStatsStatus status = netDevStats.Status;
+                        NeMoNetDevStats.NeMoNetDevStatsStatus status = nemoNetDevStats.Status;
                         integerValues.Add(LB5Metrics.ont_rx_packets, status.RxPackets);
                         integerValues.Add(LB5Metrics.ont_tx_packets, status.TxPackets);
                         integerValues.Add(LB5Metrics.ont_rx_bytes, status.RxBytes);
@@ -206,11 +208,47 @@ namespace LiveboxExporter.Components
                                               LB5Metrics.nmc_wan_state);
                     }
 
+                    if (nemo != null && 
+                        nemo.Status != null && 
+                        !string.IsNullOrEmpty(nemo.Status.ONUState))
+                    {
+                        // All this is available even when not auth.
+                        NeMo.NeMoStatus status = nemo.Status;
+
+                        // bit_rate values already gathered from nmc, but best effort here especially if no auth context.
+                        integerValues.TryAdd(LB5Metrics.device_downstream_curr_rate, (long)Math.Round(status.DownstreamCurrRate / (double)1000));
+                        integerValues.TryAdd(LB5Metrics.device_upstream_curr_rate, (long)Math.Round(status.UpstreamCurrRate / (double)1000));
+                        integerValues.TryAdd(LB5Metrics.device_downstream_max_bit_rate, (long)Math.Round(status.DownstreamMaxRate / (double)1000));
+                        integerValues.TryAdd(LB5Metrics.device_upstream_max_bit_rate, (long)Math.Round(status.UpstreamMaxRate / (double)1000));
+
+                        integerValues.Add(LB5Metrics.ont_enable, MapToBooleanInteger(status.Enable));
+                        integerValues.Add(LB5Metrics.ont_status, MapToBooleanInteger(status.Status));
+                        integerValues.Add(LB5Metrics.ont_tx_queue_length, status.TxQueueLen);
+                        integerValues.Add(LB5Metrics.ont_mtu, status.MTU);
+                        integerValues.Add(LB5Metrics.ont_net_dev_state, MapToBooleanInteger(status.NetDevState));
+                        integerValues.Add(LB5Metrics.ont_signal_rx_power, status.SignalRxPower);
+                        integerValues.Add(LB5Metrics.ont_signal_tx_power, status.SignalTxPower);
+                        integerValues.Add(LB5Metrics.ont_temperature, status.Temperature);
+                        integerValues.Add(LB5Metrics.ont_voltage, status.Voltage);
+                        integerValues.Add(LB5Metrics.ont_bias, status.Bias);
+                        integerValues.Add(LB5Metrics.ont_state, status.ONUState == "O5_Operation" ? 1 : 0);
+                    }
+                    else if (anyConnectivity)
+                    {
+                        integerValues.SetZero(LB5Metrics.ont_enable,
+                                              LB5Metrics.ont_status,
+                                              LB5Metrics.ont_tx_queue_length,
+                                              LB5Metrics.ont_net_dev_state,
+                                              LB5Metrics.ont_signal_rx_power,
+                                              LB5Metrics.ont_signal_tx_power,
+                                              LB5Metrics.ont_state);
+                    }
+
                     integerValues.Add(LB5Metrics.exporter_metrics_up, MapToBooleanInteger(allGood));
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, $"Exception occured while updating metric values: {ex.Message}");
+                    _logger.LogError(ex, "Exception occured while updating metric values: {Message}", ex.Message);
                     integerValues.SetZero(LB5Metrics.exporter_metrics_up,
                                           LB5Metrics.exporter_up);
                 }
@@ -252,7 +290,8 @@ namespace LiveboxExporter.Components
             SysBusNmc? nmc = null;
             SysBusDeviceInfo? deviceInfo = null;
             SysBusDevice? device = null;
-            NeMoNetDevStats? netDevStat = null;
+            NeMoNetDevStats? nemoNetDevStat = null;
+            NeMo? nemo = null;
             try
             {
                 bool alreadyReAuth = false;
@@ -307,31 +346,34 @@ namespace LiveboxExporter.Components
                     }
 
                     // gathered info from netDevStat is available ONLY when auth context is valid.
-                    netDevStat = await TryGetVeip0NetDevStats(cancellationToken);
-                    if (netDevStat != null)
+                    nemoNetDevStat = await TryGetVeip0NetDevStats(cancellationToken);
+                    if (nemoNetDevStat != null)
                     {
-                        if (ShouldReAuth(netDevStat, alreadyReAuth))
+                        if (ShouldReAuth(nemoNetDevStat, alreadyReAuth))
                         {
                             return ScrapeStatus.ReAuthRequired;
                         }
                         
-                        if (netDevStat.Status is null)
+                        if (nemoNetDevStat.Status is null)
                         {
-                            netDevStat = null;
+                            nemoNetDevStat = null;
                         }
                     }
                 }
 
                 // gathered info from nmc is available even when auth is invalid/expired.
                 nmc = await TryGetNmcWanStatus(cancellationToken);
+
+                // gathered info from NeMo.*.get is available even when auth is invalid/expired.
+                nemo = await TryGetVeip0(cancellationToken);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Exception occured while scraping metrics: {ex.Message}");
-                _metrics.Update(deviceInfo, device, nmc, netDevStat);
+                logger.LogError(ex, "Exception occured while scraping metrics: {Message}", ex.Message);
+                _metrics.Update(deviceInfo, device, nmc, nemoNetDevStat, nemo);
                 return ScrapeStatus.Error;
             }
-            _metrics.Update(deviceInfo, device, nmc, netDevStat);
+            _metrics.Update(deviceInfo, device, nmc, nemoNetDevStat, nemo);
             return ScrapeStatus.Success;
         }
 
@@ -371,6 +413,12 @@ namespace LiveboxExporter.Components
         {
             string? raw = await liveboxClient.RawCallFunctionWithoutParameter("NeMo.Intf.veip0", "getNetDevStats", cancellationToken);
             return string.IsNullOrEmpty(raw) ? null : JsonConvert.DeserializeObject<NeMoNetDevStats>(raw);
+        }
+
+        private async Task<NeMo?> TryGetVeip0(CancellationToken cancellationToken)
+        {
+            string? raw = await liveboxClient.RawCallFunctionWithoutParameter("NeMo.Intf.veip0", "get", cancellationToken);
+            return string.IsNullOrEmpty(raw) ? null : JsonConvert.DeserializeObject<NeMo>(raw);
         }
     }
 }

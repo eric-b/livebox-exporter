@@ -8,6 +8,8 @@ namespace LiveboxExporter.Components
 
         private readonly Dictionary<string, Gauge> _gauges;
 
+        private readonly ILogger _logger;
+
         public const string
             exporter_up = "livebox_exporter_up",
             exporter_metrics_up = "livebox_exporter_metrics_up",
@@ -47,13 +49,25 @@ namespace LiveboxExporter.Components
             ont_tx_window_errors = "livebox_ont_tx_window_errors",
             ont_rx_bit_rate = "livebox_ont_rx_bit_rate",
             ont_tx_bit_rate = "livebox_ont_tx_bit_rate",
+            ont_bias = "livebox_ont_bias",
+            ont_voltage = "livebox_ont_voltage",
+            ont_temperature = "livebox_ont_temperature",
+            ont_signal_rx_power = "livebox_ont_signal_rx_power",
+            ont_signal_tx_power = "livebox_ont_signal_tx_power",
+            ont_net_dev_state = "livebox_ont_net_dev_state",
+            ont_state = "livebox_ont_state",
+            ont_mtu = "livebox_ont_mtu",
+            ont_tx_queue_length = "livebox_ont_tx_queue_length",
+            ont_status = "livebox_ont_status",
+            ont_enable = "livebox_ont_enable",
             nmc_wan_state = "livebox_nmc_wan_state",
             nmc_link_state = "livebox_nmc_link_state",
             nmc_gpon_state = "livebox_nmc_gpon_state",
             nmc_connection_state = "livebox_nmc_connection_state";
 
-        public LB5Metrics()
+        public LB5Metrics(ILogger logger)
         {
+            _logger = logger;
             LiveboxMetricDescriptor[] descriptors = Resources.GetLB5MetricDescriptors();
             int numberOfCounters = descriptors.Count(t => t.Type == LiveboxMetricDescriptor.CollectorType.Counter);
             int numberOfGauges = descriptors.Count(t => t.Type == LiveboxMetricDescriptor.CollectorType.Gauge);
@@ -86,13 +100,20 @@ namespace LiveboxExporter.Components
         {
             foreach (KeyValuePair<string, long> kvp in values)
             {
+                bool found = false;
                 if (_gauges.TryGetValue(kvp.Key, out var gauge))
                 {
+                    found = true;
                     gauge.Set(kvp.Value);
                 }
                 else if (_counters.TryGetValue(kvp.Key, out var counter))
                 {
+                    found = true;
                     counter.IncTo(kvp.Value);
+                }
+                if (!found)
+                {
+                    _logger.LogInformation("Collector unknown - value ignored: {Key}={Value}", kvp.Key, kvp.Value);
                 }
             }
         }
