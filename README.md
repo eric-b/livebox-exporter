@@ -122,7 +122,7 @@ spec:
   - Egress
 ```
 
-If you do not already have a restrictive egress policy, here is an example. You may adapt it to your needs. **Keep in mind applying this policy may break connectivity of other pods**.
+If you do not already have a restrictive egress policy, here is an example. You may adapt it to your needs. **Be aware applying this policy may break connectivity of other pods**.
 
 ```yaml
 apiVersion: networking.k8s.io/v1
