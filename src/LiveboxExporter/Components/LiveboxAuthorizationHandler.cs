@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using System.Net.Http.Headers;
 using System.Net;
+using LiveboxExporter.Components.Model;
 
 namespace LiveboxExporter.Components
 {
@@ -10,11 +11,9 @@ namespace LiveboxExporter.Components
         private readonly ILogger _logger;
         private readonly string? _createContextJsonInput;
         private string? _contextId;
+        private DateTimeOffset? _disableAuthUntil;
 
         public static readonly HttpRequestOptionsKey<bool> ForceAuthOptionKey = new HttpRequestOptionsKey<bool>("force-auth");
-
-        record CreateContextData(string contextID);
-        record CreateContextResult(int status, CreateContextData data);
 
         public LiveboxAuthorizationHandler(IOptions<LiveboxAuthorizationHandlerOptions> options, ILogger<LiveboxAuthorizationHandler> logger)
         {
@@ -50,14 +49,23 @@ namespace LiveboxExporter.Components
         {
             if (request.Headers.Authorization is null && _createContextJsonInput is null)
             {
-                if (_contextId is null || ShouldForceAuth(request.Options))
+                if (_disableAuthUntil is null || _disableAuthUntil.Value < TimeProvider.System.GetUtcNow())
                 {
-                    _contextId = CreateContext(new Uri($"http://{request.RequestUri!.Authority}/"), cancellationToken);
-                }
+                    _disableAuthUntil = null;
+                    string? contextId = _contextId;
+                    if (contextId is null || ShouldForceAuth(request.Options))
+                    {
+                        contextId = CreateContext(new Uri($"http://{request.RequestUri!.Authority}/"), cancellationToken);
+                    }
 
-                if (_contextId != null)
+                    if (contextId != null)
+                    {
+                        request.Headers.Authorization = new AuthenticationHeaderValue("X-Sah", _contextId);
+                    }
+                }
+                else
                 {
-                    request.Headers.Authorization = new AuthenticationHeaderValue("X-Sah", _contextId);
+                    _logger.LogInformation("Auth is disabled until {Time}", _disableAuthUntil);
                 }
             }
 
@@ -65,13 +73,13 @@ namespace LiveboxExporter.Components
             {
                 return base.Send(request, cancellationToken);
             }
-            catch (HttpRequestException)
+            catch (HttpRequestException ex)
             {
                 if (_contextId != null)
                 {
                     // Forget contextId in case of connectivity issue: if livebox reboot, it will not be fully recognized.
                     _contextId = null;
-                    _logger.LogWarning("Authentication context cleared because of connectivity issue with Livebox.");
+                    _logger.LogWarning(ex, "Authentication context cleared because of connectivity issue with Livebox.");
                 }
                 throw;
             }
@@ -86,14 +94,23 @@ namespace LiveboxExporter.Components
         {
             if (request.Headers.Authorization is null && _createContextJsonInput != null)
             {
-                if (_contextId is null || ShouldForceAuth(request.Options))
+                if (_disableAuthUntil is null || _disableAuthUntil.Value < TimeProvider.System.GetUtcNow())
                 {
-                    _contextId = await CreateContextAsync(new Uri($"http://{request.RequestUri!.Authority}/"), cancellationToken).ConfigureAwait(false);
-                }
+                    _disableAuthUntil = null;
+                    string? contextId = _contextId;
+                    if (contextId is null || ShouldForceAuth(request.Options))
+                    {
+                        contextId = await CreateContextAsync(new Uri($"http://{request.RequestUri!.Authority}/"), cancellationToken).ConfigureAwait(false);
+                    }
 
-                if (_contextId != null)
+                    if (contextId != null)
+                    {
+                        request.Headers.Authorization = new AuthenticationHeaderValue("X-Sah", _contextId);
+                    }
+                }
+                else
                 {
-                    request.Headers.Authorization = new AuthenticationHeaderValue("X-Sah", _contextId);
+                    _logger.LogInformation("Auth is disabled until {Time}", _disableAuthUntil);
                 }
             }
 
@@ -101,13 +118,13 @@ namespace LiveboxExporter.Components
             {
                 return await base.SendAsync(request, cancellationToken);
             }
-            catch (HttpRequestException)
+            catch (HttpRequestException ex)
             {
                 if (_contextId != null)
                 {
                     // Forget contextId in case of connectivity issue: if livebox reboot, it will not be fully recognized.
                     _contextId = null;
-                    _logger.LogWarning("Authentication context cleared because of connectivity issue with Livebox.");
+                    _logger.LogWarning(ex, "Authentication context cleared because of connectivity issue with Livebox.");
                 }
                 throw;
             }
@@ -127,18 +144,26 @@ namespace LiveboxExporter.Components
             using var request = CreateLoginRequest(baseAddress);
             using var response = base.Send(request, cancellationToken);
             string? responseJson = null;
-            if (response.StatusCode == HttpStatusCode.OK &&
-                response.Content != null &&
+            if (response.Content != null &&
                 response.Content.Headers.ContentType?.MediaType?.EndsWith("json") == true)
             {
                 using Stream responseStream = response.Content.ReadAsStream(cancellationToken);
                 using var reader = new StreamReader(responseStream);
                 responseJson = reader.ReadToEnd();
-                var result = JsonConvert.DeserializeObject<CreateContextResult>(responseJson);
-                if (result?.data?.contextID != null)
+                var result = JsonConvert.DeserializeObject<AuthResponse>(responseJson);
+                if (response.StatusCode == HttpStatusCode.OK)
                 {
-                    _logger.LogInformation("New authentication context created.");
-                    return result.data.contextID;
+                    if (result?.Data?.ContextID != null)
+                    {
+                        _logger.LogInformation("New authentication context created.");
+                        _contextId = result.Data.ContextID;
+                        _disableAuthUntil = null;
+                        return _contextId;
+                    }
+                }
+                else if (response.StatusCode == HttpStatusCode.Unauthorized && result?.Errors?[0]?.Waittime > 0)
+                {
+                    _disableAuthUntil = TimeProvider.System.GetUtcNow().AddSeconds(result.Errors[0].Waittime + 1);
                 }
             }
             throw new Exception($"Failed to create session context (authentication). Response: {response.StatusCode} - {response.Content?.Headers.ContentType} {responseJson}");
@@ -151,18 +176,26 @@ namespace LiveboxExporter.Components
             string? responseJson = null;
             try
             {
-                if (response.StatusCode == HttpStatusCode.OK &&
-                    response.Content != null &&
+                if (response.Content != null &&
                     response.Content.Headers.ContentType?.MediaType?.EndsWith("json") == true)
                 {
                     using Stream responseStream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
                     using var reader = new StreamReader(responseStream);
                     responseJson = await reader.ReadToEndAsync().ConfigureAwait(false);
-                    var result = JsonConvert.DeserializeObject<CreateContextResult>(responseJson);
-                    if (result?.data?.contextID != null)
+                    var result = JsonConvert.DeserializeObject<AuthResponse>(responseJson);
+                    if (response.StatusCode == HttpStatusCode.OK)
                     {
-                        _logger.LogInformation("New authentication context created.");
-                        return result.data.contextID;
+                        if (result?.Data?.ContextID != null)
+                        {
+                            _logger.LogInformation("New authentication context created.");
+                            _contextId = result.Data.ContextID;
+                            _disableAuthUntil = null;
+                            return _contextId;
+                        }
+                    }
+                    else if (response.StatusCode == HttpStatusCode.Unauthorized && result?.Errors?[0]?.Waittime > 0)
+                    {
+                        _disableAuthUntil = TimeProvider.System.GetUtcNow().AddSeconds(result.Errors[0].Waittime + 1);
                     }
                 }
             }
