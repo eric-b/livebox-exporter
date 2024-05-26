@@ -5,6 +5,8 @@ It is meant to be integrated with [Prometheus](https://prometheus.io/docs/instru
 
 Once deployed, endpoint `/metrics` returns a page of [text-based metrics](https://prometheus.io/docs/instrumenting/exposition_formats/#text-based-format/). Default URL will be: `http://localhost:9105/metrics`
 
+You can get an idea of available metrics from [this file LB5-metrics.csv located in embedded resources](src/LiveboxExporter/Resources/LB5-metrics.csv).
+
 Dashboard for Grafana is available here: https://grafana.com/grafana/dashboards/21101-livebox/
 
 ![Grafana dashboard example](graphics/grafana-dashboard-sample.png)
