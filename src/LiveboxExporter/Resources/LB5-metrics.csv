@@ -1,0 +1,53 @@
+livebox_exporter_up;gauge;Connectivity with Livebox is up
+livebox_exporter_metrics_up;gauge;All exporter metrics are up to date
+livebox_device_info_uptime;gauge;Up Time
+livebox_device_info_status;gauge;Device Status
+livebox_device_info_reboots_total;counter;Number of Reboots
+livebox_device_active;gauge;Device Active
+livebox_device_link_state;gauge;Device Link State
+livebox_device_connection_state;gauge;Device Connection State
+livebox_device_internet;gauge;Internet enabled
+livebox_device_iptv;gauge;IPTV enabled
+livebox_device_telephony;gauge;Telephony enabled
+livebox_device_downstream_curr_rate;gauge;Downstream current rate
+livebox_device_upstream_curr_rate;gauge;Upstream current rate
+livebox_device_downstream_max_bit_rate;gauge;Downstream max bit rate
+livebox_device_upstream_max_bit_rate;gauge;Upstream max bit rate
+livebox_ont_rx_packets;gauge;WAN stats (RX packets)
+livebox_ont_tx_packets;gauge;WAN stats (TX packets)
+livebox_ont_rx_bytes;gauge;WAN stats (RX bytes)
+livebox_ont_tx_bytes;gauge;WAN stats (TX bytes)
+livebox_ont_rx_errors;gauge;WAN stats (RX errors)
+livebox_ont_tx_errors;gauge;WAN stats (TX errors)
+livebox_ont_rx_dropped;gauge;WAN stats (RX dropped)
+livebox_ont_tx_dropped;gauge;WAN stats (TX dropped)
+livebox_ont_multicast;gauge;WAN stats (multicast)
+livebox_ont_collisions;gauge;WAN stats (collisions)
+livebox_ont_rx_length_errors;gauge;WAN stats (RX length errors)
+livebox_ont_rx_over_errors;gauge;WAN stats (RX Over errors)
+livebox_ont_rx_crc_errors;gauge;WAN stats (RX CRC errors)
+livebox_ont_rx_frame_errors;gauge;WAN stats (RX frame errors)
+livebox_ont_rx_fifo_errors;gauge;WAN stats (RX FIFO errors)
+livebox_ont_rx_missed_errors;gauge;WAN stats (RX missed errors)
+livebox_ont_tx_aborted_errors;gauge;WAN stats (TX aborted errors)
+livebox_ont_tx_carrier_errors;gauge;WAN stats (TX carrier errors)
+livebox_ont_tx_fifo_errors;gauge;WAN stats (TX FIFO errors)
+livebox_ont_tx_heartbeat_errors;gauge;WAN stats (TX heartbeat errors)
+livebox_ont_tx_window_errors;gauge;WAN stats (TX window errors)
+livebox_ont_rx_bit_rate;gauge;WAN stats (RX computed bit rate)
+livebox_ont_tx_bit_rate;gauge;WAN stats (TX computed bit rate)
+livebox_ont_bias;gauge;ONT Bias
+livebox_ont_voltage;gauge;ONT device voltage
+livebox_ont_temperature;gauge;ONT device temperature
+livebox_ont_signal_rx_power;gauge;ONT signal power (RX)
+livebox_ont_signal_tx_power;gauge;ONT signal power (TX)
+livebox_ont_net_dev_state;gauge;ONT device state
+livebox_ont_state;gauge;ONT state
+livebox_ont_mtu;gauge;ONT MTU
+livebox_ont_tx_queue_length;gauge;ONT TX queue length
+livebox_ont_status;gauge;ONT status
+livebox_ont_enable;gauge;ONT enabled
+livebox_nmc_wan_state;gauge;NMC WAN state
+livebox_nmc_link_state;gauge;NMC Link state
+livebox_nmc_gpon_state;gauge;NMC GPON state
+livebox_nmc_connection_state;gauge;NMC Connection state

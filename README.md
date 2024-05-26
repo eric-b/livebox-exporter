@@ -5,6 +5,8 @@ It is meant to be integrated with [Prometheus](https://prometheus.io/docs/instru
 
 Once deployed, endpoint `/metrics` returns a page of [text-based metrics](https://prometheus.io/docs/instrumenting/exposition_formats/#text-based-format/). Default URL will be: `http://localhost:9105/metrics`
 
+You can get an idea of available metrics from [this file LB5-metrics.csv located in embedded resources](src/LiveboxExporter/Resources/LB5-metrics.csv).
+
 Dashboard for Grafana is available here: https://grafana.com/grafana/dashboards/21101-livebox/
 
 ![Grafana dashboard example](graphics/grafana-dashboard-sample.png)
@@ -51,7 +53,7 @@ Docker image is published on [Docker Hub](https://hub.docker.com/r/eric1901/live
 
 Examples of resource manifests:
 
-```
+```yaml
 apiVersion: v1
 kind: Secret
 metadata:
@@ -96,13 +98,63 @@ spec:
           value: "/var/secret/admin-password"
 ```
 
+### Restricted network policy
+
+You legitimately may want to restrict egress network policy of this pod.
+
+Assuming you already have setup a restrictive [network policy](https://kubernetes.io/docs/concepts/services-networking/network-policies/), here is an example of a policy to allow egress from livebox-exporter pod to your livebox (you may need to adapt CIDR value):
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: livebox-exporter-networkpolicy
+spec:
+  podSelector:
+    matchLabels:
+      app: "livebox-exporter"
+  egress:
+  - to:
+    - ipBlock:
+        cidr: 192.168.0.0/16
+    ports:
+    - protocol: TCP
+      port: 80
+  policyTypes:
+  - Egress
+```
+
+If you do not already have a restrictive egress policy, here is an example. You may adapt it to your needs. **Be aware applying this policy may break connectivity of other pods**.
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all-egress
+spec:
+  podSelector: {}
+  egress:
+  - to:
+    - ipBlock:
+        cidr: 10.0.0.0/10
+    ports:
+    - protocol: TCP
+      port: 53
+    - protocol: UDP
+      port: 53
+  policyTypes:
+  - Egress
+```
+
+Once applied, you can play with the `livebox-exporter-networkpolicy` (delete / apply) to see that livebox-exporter cannot or can reach your livebox.
+
 ### Create a service
 
 #### Expose API outside Kubernetes cluster
 
 For example, if you simply want to expose this API outside of the Kubernetes cluster, use a `NodePort` service type:
 
-```
+```yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -127,7 +179,7 @@ The API will be accessible via `http://Your-Kubernetes-Cluster-Ip:30080/metrics`
 
 Alternatively, if you have a reverse proxy inside another pod on same cluster, use a `ClusterIP` service type:
 
-```
+```yaml
 apiVersion: v1
 kind: Service
 metadata:
