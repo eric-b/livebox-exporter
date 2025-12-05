@@ -1,3 +1,9 @@
+# This repository has been moved
+
+New location of this repository is on Codeberg: https://codeberg.org/eric-b/livebox-exporter
+
+Following content is the original README and may not be up to date.
+
 # Livebox Exporter for Prometheus
 
 This project exposes a subset of basic metrics from Orange **Livebox 5** router.
